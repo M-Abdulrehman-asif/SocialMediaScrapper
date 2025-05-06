@@ -11,15 +11,20 @@ if not APIFY_TOKEN:
 
 def extract_twitter_fields(item):
     print("[DEBUG] Extracting fields from item...")
+    media = (
+        item.get("extended_entities", {})
+        .get("media", [{}])
+    )
     return {
-        "channel_name": item.get("userName") or item.get("user", {}).get("name"),
-        "description": item.get("text") or item.get("description"),
-        "likes_count": item.get("favoriteCount") or item.get("likesCount"),
-        "retweets_count": item.get("retweetCount") or item.get("retweetsCount"),
-        "media_url": (item.get("mediaUrls") or [None])[0],
-        "favorite_count": item.get("favoriteCount") or item.get("likesCount"),
-        "followers_count": item.get("followersCount") or item.get("user", {}).get("followersCount")
+        "channel_name": item.get("user", {}).get("name"),
+        "description": item.get("full_text") or item.get("text") or "",
+        "likes_count": item.get("favorite_count"),
+        "retweets_count": item.get("retweet_count"),
+        "media_url": media[0].get("media_url_https") if media else None,
+        "favorite_count": item.get("favorite_count"),
+        "followers_count": item.get("user", {}).get("followers_count"),
     }
+
 
 async def twitter_crawl(keywords: list, num_of_posts: int):
     print(f"[INFO] Starting Twitter crawl for keywords: {keywords}")

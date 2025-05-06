@@ -73,3 +73,15 @@ async def scrape_keywords(request: Request):
 
     print("[INFO] Scraping process completed")
     return {"scraped_data": all_data}
+
+
+from fastapi import Query
+from typing import List
+from crawlers.instagram_crawl import instagram_crawl
+
+@router.post("/crawlinsta")
+async def crawl_instagram(
+    keywords: List[str] = Query(..., description="List of keywords"),
+    num_of_posts: int = 1
+):
+    return await instagram_crawl(keywords, num_of_posts)
