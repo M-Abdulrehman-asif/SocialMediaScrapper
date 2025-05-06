@@ -3,7 +3,9 @@ from datetime import datetime
 from database.db_manager import DatabaseHandler
 from crawlers.tiktok_crawl import tiktok_crawl
 from crawlers.twitter_crawl import twitter_crawl
-from utils.insert import insert_scraped_data, PLATFORM_MODEL_MAP
+from crawlers.instagram_crawl import instagram_crawl
+from crawlers.facebook_crawl import facebook_crawl
+from utils.insert import insert_data, PLATFORM_MODEL_MAP
 
 router = APIRouter()
 
@@ -46,42 +48,60 @@ async def scrape_keywords(request: Request):
         print(f"[INFO] Starting TikTok crawl for keywords: {keywords}")
         raw_data = await tiktok_crawl(keywords, num_of_posts)
         print(f"[DEBUG] TikTok raw data: {raw_data}")
-        all_data.update(raw_data)
+        tiktok_data = {keyword: {"tiktok": raw_data[keyword]} for keyword in raw_data}
+        all_data.update(tiktok_data)
 
         with db_handler.session as db:
             print("[DEBUG] Inserting TikTok data into database...")
-            insert_scraped_data(db, raw_data, PLATFORM_MODEL_MAP)
-            print("[DEBUG] Data insertion completed")
+            insert_data(db, raw_data, PLATFORM_MODEL_MAP)
             db.commit()
-            print("[DEBUG] Database commit completed")
+            print("[DEBUG] Data insertion completed")
 
     if 'twitter' in scrappers:
         print(f"[INFO] Starting Twitter crawl for keywords: {keywords}")
         raw_data = await twitter_crawl(keywords, num_of_posts)
         print(f"[DEBUG] Twitter raw data: {raw_data}")
 
-        # Wrap Twitter data under the 'twitter' platform name
-        twitter_data = {keyword: {"twitter": raw_data[keyword]} for keyword in raw_data}
+        twitter_data = {keyword: raw_data[keyword] for keyword in raw_data}
         all_data.update(twitter_data)
 
         with db_handler.session as db:
             print("[DEBUG] Inserting Twitter data into database...")
-            insert_scraped_data(db, twitter_data, PLATFORM_MODEL_MAP)
-            print("[DEBUG] Data insertion completed")
+            insert_data(db, twitter_data, PLATFORM_MODEL_MAP)
             db.commit()
-            print("[DEBUG] Database commit completed")
+            print("[DEBUG] Data insertion completed")
+
+    if 'instagram' in scrappers:
+        print(f"[INFO] Starting Instagram crawl for keywords: {keywords}")
+        response = await instagram_crawl(keywords, num_of_posts)
+
+        if response["status"] == "success":
+            cleaned_data = response["scraped_data"]
+            print(f"[DEBUG] Cleaned Instagram data: {cleaned_data}")
+
+            all_data.update(cleaned_data)
+
+            with db_handler.session as db:
+                print("[DEBUG] Inserting Instagram data into database...")
+                insert_data(db, cleaned_data, PLATFORM_MODEL_MAP)
+                db.commit()
+                print("[DEBUG] Data insertion completed")
+        else:
+            print(f"[ERROR] Instagram crawl failed: {response['message']}")
+
+        if 'facebook' in scrappers:
+            print(f"[INFO] Starting Facebook crawl for keywords: {keywords}")
+            raw_data = await facebook_crawl(keywords, num_of_posts)
+            print(f"[DEBUG] Facebook cleaned data: {raw_data}")
+
+            facebook_data = {keyword: raw_data[keyword] for keyword in raw_data}
+            all_data.update(facebook_data)
+
+            with db_handler.session as db:
+                print("[DEBUG] Inserting Facebook data into database...")
+                insert_data(db, facebook_data, PLATFORM_MODEL_MAP)
+                db.commit()
+                print("[DEBUG] Data insertion completed")
 
     print("[INFO] Scraping process completed")
     return {"scraped_data": all_data}
-
-
-from fastapi import Query
-from typing import List
-from crawlers.instagram_crawl import instagram_crawl
-
-@router.post("/crawlinsta")
-async def crawl_instagram(
-    keywords: List[str] = Query(..., description="List of keywords"),
-    num_of_posts: int = 1
-):
-    return await instagram_crawl(keywords, num_of_posts)

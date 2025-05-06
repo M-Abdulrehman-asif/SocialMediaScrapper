@@ -1,3 +1,4 @@
+import utils.session
 from fastapi import FastAPI
 from router.index import router as scrape_data_router
 

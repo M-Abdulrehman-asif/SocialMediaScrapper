@@ -71,7 +71,7 @@ async def twitter_crawl(keywords: list, num_of_posts: int):
                 print(f"[DEBUG] Extracted data: {extracted}")
                 platform_data.append(extracted)
 
-            all_data[keyword] = platform_data
+            all_data[keyword] = {"twitter": platform_data}
             print(f"[INFO] Completed processing for keyword: {keyword}, Total items: {len(platform_data)}")
 
         print(f"[INFO] Twitter crawl completed for all keywords.")
