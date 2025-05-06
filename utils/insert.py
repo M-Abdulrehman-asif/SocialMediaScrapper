@@ -1,12 +1,14 @@
-from utils.model import UserProfile, TwitterPost
+from utils.model import UserProfile, TwitterPost, InstaPost, FacebookPost
 
 PLATFORM_MODEL_MAP = {
     "tiktok": UserProfile,
     "twitter": TwitterPost,
+    "instagram":InstaPost,
+    "facebook":FacebookPost
 }
 
 
-def insert_scraped_data(db, raw_data, platform_model_map):
+def insert_data(db, raw_data, platform_model_map):
     print("[DEBUG] Starting insert_scraped_data function")
 
     default_platform = None
@@ -20,7 +22,6 @@ def insert_scraped_data(db, raw_data, platform_model_map):
             print(f"[WARNING] Skipping keyword '{keyword}' due to error: {platform_data['error']}")
             continue
 
-        # Case 1: Dict with platform names
         if isinstance(platform_data, dict):
             for platform_name, items in platform_data.items():
                 print(f"[DEBUG] Processing platform: {platform_name}")
@@ -42,7 +43,6 @@ def insert_scraped_data(db, raw_data, platform_model_map):
                     except Exception as e:
                         print(f"[ERROR] Failed to create/add {platform_name} object: {e}")
 
-        # Case 2: Raw list of items, use default platform if available
         elif isinstance(platform_data, list):
             print(f"[DEBUG] Detected list. Attempting to use default platform")
 

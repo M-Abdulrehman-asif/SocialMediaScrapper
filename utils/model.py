@@ -38,3 +38,25 @@ class TwitterPost(Base):
     media_url = Column(String)
     favorite_count = Column(Integer)
     followers_count = Column(Integer)
+
+
+class InstaPost(Base):
+    __tablename__ = 'instagram_post'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    posts_count = Column(Integer, nullable=False)
+    url = Column(String, nullable=False)
+    posts = Column(String, nullable=True)  # e.g., "72.38 M"
+    posts_per_day = Column(String, nullable=True)  # e.g., "13.04 K"
+
+
+class FacebookPost(Base):
+    __tablename__ = 'facebook_posts'
+
+    id = Column(Integer, primary_key=True, index=True)
+    facebook_url = Column(String, nullable=False)
+    reaction = Column(String, nullable=True)
+    name = Column(String, nullable=False)
+    profile_url = Column(String, nullable=False)
+    facebook_id = Column(String, nullable=False)
